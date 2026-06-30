@@ -23,6 +23,7 @@ type l4ProxyOptions struct {
 	dnsServers        []string
 	dnsTimeout        time.Duration
 	useIPv6           bool
+	sni               string
 	keepalivePeriod   time.Duration
 	initialPacketSize uint16
 	insecure          bool
@@ -64,6 +65,12 @@ func buildL4Proxy(cmd *cobra.Command, mode string) (l4ProxyOptions, *api.L4Proxy
 	if opts.useIPv6, err = cmd.Flags().GetBool("ipv6"); err != nil {
 		return opts, nil, fmt.Errorf("failed to get ipv6 flag: %v", err)
 	}
+	if opts.sni, err = cmd.Flags().GetString("sni-address"); err != nil {
+		return opts, nil, fmt.Errorf("failed to get SNI address: %v", err)
+	}
+	if opts.sni == "" {
+		opts.sni = internal.L4ConnectSNI
+	}
 	if opts.keepalivePeriod, err = cmd.Flags().GetDuration("keepalive-period"); err != nil {
 		return opts, nil, fmt.Errorf("failed to get keepalive period: %v", err)
 	}
@@ -102,7 +109,7 @@ func buildL4Proxy(cmd *cobra.Command, mode string) (l4ProxyOptions, *api.L4Proxy
 	if err != nil {
 		return opts, nil, fmt.Errorf("failed to generate cert: %v", err)
 	}
-	tlsConfig, err := api.PrepareTlsConfig(privKey, peerPubKey, cert, internal.L4ConnectSNI, opts.insecure)
+	tlsConfig, err := api.PrepareTlsConfig(privKey, peerPubKey, cert, opts.sni, opts.insecure)
 	if err != nil {
 		return opts, nil, fmt.Errorf("failed to prepare TLS config: %v", err)
 	}
@@ -209,6 +216,7 @@ func addL4ProxyFlags(cmd *cobra.Command, defaultPort, proxyName string) {
 	cmd.Flags().StringArrayP("dns", "d", []string{"9.9.9.9", "149.112.112.112", "2620:fe::fe", "2620:fe::9"}, "DNS servers for local proxy name lookups with -l (unless --system-dns)")
 	cmd.Flags().DurationP("dns-timeout", "t", 2*time.Second, "Timeout for DNS queries")
 	cmd.Flags().BoolP("ipv6", "6", false, "Use IPv6 for MASQUE connection")
+	cmd.Flags().StringP("sni-address", "s", internal.L4ConnectSNI, "SNI address to use for MASQUE connection")
 	cmd.Flags().DurationP("keepalive-period", "k", 30*time.Second, "Keepalive period for MASQUE connection")
 	cmd.Flags().Uint16P("initial-packet-size", "i", 0, "Custom initial packet size for MASQUE connection (default: auto with PMTU discovery)")
 	cmd.Flags().Bool("insecure", false, "Disable endpoint certificate pinning and trust any certificate")
