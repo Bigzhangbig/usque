@@ -18,7 +18,9 @@ on:
 
 env:
   REGISTRY: ghcr.harvryhome.site
-  IMAGE_NAME: ${{ github.repository }}
+  # ghcr requires lowercase repo names; Bigzhangbig must be lowercased here.
+  IMAGE_NAME: ${{ github.repository_owner }}/usque
+  IMAGE_NAME_LC: ${{ lower(github.repository_owner) }}/usque
 
 jobs:
   build:
@@ -60,7 +62,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -80,8 +82,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:buildcache-${{ matrix.arch }},mode=max
 
   manifest:
     name: Manifest list (multi-arch)
@@ -111,8 +113,8 @@ jobs:
               suffix="${entry%%=*}"
               platform="${entry##*=}"
               crane cp \
-                "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${tag}" \
-                "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${suffix}:${tag}" \
+                "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:${tag}" \
+                "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}-${suffix}:${tag}" \
                 --platform "${platform}"
             done
           done
@@ -120,7 +122,7 @@ jobs:
       - name: Verify manifest list
         run: |
           set -e
-          crane manifest "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main" | jq .
+          crane manifest "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:main" | jq .
 
   notify:
     name: Notify on failure
@@ -133,4 +135,4 @@ jobs:
       - name: Echo failure summary
         run: |
           echo "::error::usque Docker build/publish failed on ${{ github.ref_name }} (${{ github.sha }})"
-          echo "Inspect: https://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "Inspect: https://${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}"
