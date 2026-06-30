@@ -18,9 +18,8 @@ on:
 
 env:
   REGISTRY: ghcr.harvryhome.site
-  # ghcr requires lowercase repo names; Bigzhangbig must be lowercased here.
-  IMAGE_NAME: ${{ github.repository_owner }}/usque
-  IMAGE_NAME_LC: ${{ lower(github.repository_owner) }}/usque
+  # ghcr requires lowercase repo names; "Bigzhangbig" must be lowercased to "bigzhangbig".
+  IMAGE_NAME: bigzhangbig/usque
 
 jobs:
   build:
