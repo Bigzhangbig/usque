@@ -72,7 +72,7 @@ jobs:
           flavor: |
             latest=auto
 
-      - name: Build and push (cache from registry)
+      - name: Build and push (cache via GHA)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -81,8 +81,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }},mode=max
+          cache-from: type=gha,scope=buildcache-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=buildcache-${{ matrix.arch }}
 
   manifest:
     name: Manifest list (multi-arch)
