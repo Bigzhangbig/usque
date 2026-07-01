@@ -17,7 +17,7 @@ on:
         default: ""
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: ghcr.harvryhome.site
   # ghcr requires lowercase repo names; "Bigzhangbig" must be lowercased to "bigzhangbig".
   IMAGE_NAME: bigzhangbig/usque
 
